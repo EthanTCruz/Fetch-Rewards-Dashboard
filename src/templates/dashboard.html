@@ -1,0 +1,24 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Dashboard</title>
+  </head>
+  <body>
+    <h1>Forecasting Dashboard</h1>
+    <div>
+      <!-- Toggle button -->
+      <a href="/toggle">{{ button_text }}</a>
+    </div>
+    <div>
+      <!-- Display the selected plot -->
+      {% if plot_type == 'arima' %}
+        <h2>ARIMA Plot</h2>
+        <img src="{{ arima_image }}" alt="ARIMA Plot">
+      {% else %}
+        <h2>Prophet Plot</h2>
+        <img src="{{ prophet_image }}" alt="Prophet Plot">
+      {% endif %}
+    </div>
+  </body>
+</html>
