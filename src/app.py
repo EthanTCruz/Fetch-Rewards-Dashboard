@@ -18,13 +18,15 @@ def dashboard():
     button_text = "Show Prophet Plot" if plot_type == 'arima' else "Show ARIMA Plot"
     
     # Generate image paths
-    arima_image = ArimaGraphs()
-    prophet_image = ProphetGraphs()
+    arima_graph = ArimaGraphs()
+    prophet_graph = ProphetGraphs()
 
-    # Create response with the new plot type
-    response = make_response(render_template('dashboard.html', plot_type=plot_type, button_text=button_text, arima_image=arima_image, prophet_image=prophet_image))
-    response.set_cookie('plot_type', plot_type)
-    return response
+    # Pass JSON to template
+    return render_template('dashboard.html', 
+                           plot_type=plot_type, 
+                           button_text=button_text, 
+                           arima_graph=arima_graph, 
+                           prophet_graph=prophet_graph)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,24 +1,47 @@
-
-<!doctype html>
-<html lang="en">
-  <head>
+<!DOCTYPE html>
+<html>
+<head>
     <title>Dashboard</title>
-  </head>
-  <body>
-    <h1>Forecasting Dashboard</h1>
-    <div>
-      <!-- Toggle button -->
-      <a href="/toggle">{{ button_text }}</a>
-    </div>
-    <div>
-      <!-- Display the selected plot -->
-      {% if plot_type == 'arima' %}
-        <h2>ARIMA Plot</h2>
-        <img src="{{ arima_image }}" alt="ARIMA Plot">
-      {% else %}
-        <h2>Prophet Plot</h2>
-        <img src="{{ prophet_image }}" alt="Prophet Plot">
-      {% endif %}
-    </div>
-  </body>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .hidden { display: none; }
+        .plot-container {
+    width: 800px;
+    height: 600px;
+}
+
+    </style>
+    <!-- Other head elements -->
+</head>
+<body>
+    <!-- Toggle Button -->
+    <button id="toggleButton">{{ button_text }}</button>
+
+    <!-- Divs for Plotly Graphs -->
+    <div id="arimaGraph" id="plot-container"></div> <!-- Initially visible -->
+    <div id="prophetGraph" id="plot-container" class="hidden"></div> <!-- Initially hidden -->
+
+    <script>
+        // Render Plotly Graphs
+        var arimaGraphData = {{ arima_graph|safe }};
+        var prophetGraphData = {{ prophet_graph|safe }};
+        Plotly.newPlot('arimaGraph', arimaGraphData.data, arimaGraphData.layout);
+        Plotly.newPlot('prophetGraph', prophetGraphData.data, prophetGraphData.layout);
+
+        // Toggle Button Functionality
+        document.getElementById('toggleButton').addEventListener('click', function() {
+            var arimaDiv = document.getElementById('arimaGraph');
+            var prophetDiv = document.getElementById('prophetGraph');
+
+            // Toggle visibility
+            if (arimaDiv.classList.contains('hidden')) {
+                arimaDiv.classList.remove('hidden');
+                prophetDiv.classList.add('hidden');
+            } else {
+                arimaDiv.classList.add('hidden');
+                prophetDiv.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
 </html>
