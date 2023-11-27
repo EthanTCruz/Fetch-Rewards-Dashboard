@@ -3,44 +3,94 @@
 <head>
     <title>Dashboard</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <style>
-        .hidden { display: none; }
-        .plot-container {
-    width: 800px;
-    height: 600px;
-}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 
-    </style>
-    <!-- Other head elements -->
+
 </head>
 <body>
     <!-- Toggle Button -->
     <button id="toggleButton">{{ button_text }}</button>
-
+    <div class="content-container">
+        <!-- Divs for Plotly Graphs -->
+        <div class="graphs-container">
     <!-- Divs for Plotly Graphs -->
-    <div id="arimaGraph" id="plot-container"></div> <!-- Initially visible -->
-    <div id="prophetGraph" id="plot-container" class="hidden"></div> <!-- Initially hidden -->
-
+    <div id="arimaGraph" class="plot-container"></div> <!-- Initially visible -->
+    <div id="prophetGraph" class="plot-container hidden"></div> <!-- Initially hidden -->
+    </div>
+    <div id="statistics">
+        <h3>Summary Statistics</h3>
+        <table>
+            <tr>
+                <th>Statistic</th>
+                <th class="arima-stat">ARIMA</th>
+                <th class="prophet-stat hidden">Prophet</th>
+            </tr>
+            <tr>
+                <td>Predicted Mean: </td>
+                <td class="arima-stat">{{ summary_stats.arima_predicted_mean }}</td>
+                <td class="prophet-stat hidden">{{ summary_stats.prophet_predicted_mean }}</td>
+            </tr>
+            <tr>
+                <td>Predicted Min: </td>
+                <td class="arima-stat">{{ summary_stats.arima_predicted_min }}</td>
+                <td class="prophet-stat hidden">{{ summary_stats.prophet_predicted_min }}</td>
+            </tr>
+            <tr>
+                <td>Predicted Max: </td>
+                <td class="arima-stat">{{ summary_stats.arima_predicted_max }}</td>
+                <td class="prophet-stat hidden">{{ summary_stats.prophet_predicted_max }}</td>
+            </tr>
+            <tr>
+                <td>Predicted Total: </td>
+                <td class="arima-stat">{{ summary_stats.arima_predicted_sum }}</td>
+                <td class="prophet-stat hidden">{{ summary_stats.prophet_predicted_sum }}</td>
+            </tr>
+            <!-- Add rows for actual statistics -->
+            <tr>
+                <td>2021 Mean: </td>
+                <td colspan="2">{{ summary_stats.actual_mean }}</td>
+            </tr>
+            <tr>
+                <td>2021 Min: </td>
+                <td colspan="2">{{ summary_stats.actual_min }}</td>
+            </tr>
+            <tr>
+                <td>2021 Max: </td>
+                <td colspan="2">{{ summary_stats.actual_max }}</td>
+            </tr>
+            <tr>
+                <td>2021 Total: </td>
+                <td colspan="2">{{ summary_stats.actual_sum }}</td>
+            </tr>
+        </table>
+    </div>
+    </div>
+    
+    
     <script>
         // Render Plotly Graphs
         var arimaGraphData = {{ arima_graph|safe }};
         var prophetGraphData = {{ prophet_graph|safe }};
         Plotly.newPlot('arimaGraph', arimaGraphData.data, arimaGraphData.layout);
         Plotly.newPlot('prophetGraph', prophetGraphData.data, prophetGraphData.layout);
-
-        // Toggle Button Functionality
+    
+        var isArimaGraphDisplayed = true; // Initial state
+    
         document.getElementById('toggleButton').addEventListener('click', function() {
             var arimaDiv = document.getElementById('arimaGraph');
             var prophetDiv = document.getElementById('prophetGraph');
-
-            // Toggle visibility
-            if (arimaDiv.classList.contains('hidden')) {
-                arimaDiv.classList.remove('hidden');
-                prophetDiv.classList.add('hidden');
-            } else {
-                arimaDiv.classList.add('hidden');
-                prophetDiv.classList.remove('hidden');
-            }
+        
+            // Toggle visibility of graphs
+            arimaDiv.classList.toggle('hidden');
+            prophetDiv.classList.toggle('hidden');
+        
+            // Toggle visibility of ARIMA and Prophet stats
+            document.querySelectorAll('.arima-stat').forEach(function(el) {
+                el.classList.toggle('hidden');
+            });
+            document.querySelectorAll('.prophet-stat').forEach(function(el) {
+                el.classList.toggle('hidden');
+            });
         });
     </script>
 </body>

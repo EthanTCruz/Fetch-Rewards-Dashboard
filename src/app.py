@@ -18,15 +18,17 @@ def dashboard():
     button_text = "Show Prophet Plot" if plot_type == 'arima' else "Show ARIMA Plot"
     
     # Generate image paths
-    arima_graph = ArimaGraphs()
-    prophet_graph = ProphetGraphs()
-
+    
+    arima_graph, arima_stats = ArimaGraphs()
+    prophet_graph, prophet_stats = ProphetGraphs()
+    summary_stats = arima_stats | prophet_stats
     # Pass JSON to template
     return render_template('dashboard.html', 
                            plot_type=plot_type, 
                            button_text=button_text, 
                            arima_graph=arima_graph, 
-                           prophet_graph=prophet_graph)
+                           prophet_graph=prophet_graph,
+                           summary_stats = summary_stats)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,31 @@
+
+        
+.hidden { display: none; }
+.plot-container {
+    width: 1600px;
+    height: 600px;
+}
+.content-container {
+    width: 1600px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.graphs-container {
+    flex: 8; /* This allows the graph container to grow and take available space */
+}
+
+#statistics {
+    flex: 0 0 300px; /* This sets the width of the statistics div and prevents it from growing */
+    /* Adjust the width as needed */
+}
+
+.plot-container {
+    width: 100%;
+    height: auto /* Adjust height as needed */
+}
+@media (max-width: 1600px) {
+    .content-container {
+        flex-direction: column;
+    }
+}
