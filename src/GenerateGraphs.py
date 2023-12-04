@@ -1,10 +1,13 @@
 import pandas as pd
 import plotly.graph_objects as go
-
-
+from arima_model import ArimaPredictor
+from prophet_model import ProphetPredictor
+from linear_regression_model import LinearProgressionPredictor
+from config import Settings
+s = Settings()
 
 class Grapher():
-    def __init__(self,dataFileLocation: str) -> None:
+    def __init__(self,dataFileLocation: str = s.dataFileLocation) -> None:
         self.dataFileLocation = dataFileLocation
 
     def returnMonthlyData(self):
@@ -16,7 +19,7 @@ class Grapher():
         data_monthly = data_csv.groupby(pd.Grouper(key='Date', freq='M')).sum()
         return data_monthly
 
-    def Graph(self,predicted_data, data_monthly, predicted_months: pd.DatetimeIndex, graph_name: str):
+    def Graph(self,predicted_data, data_monthly, predicted_months: pd.DatetimeIndex):
         summary_statistics = {}
         summary_statistics["Projected 2022 Monthly Mean"] = round(predicted_data["Predicted_Receipts"].mean(),2)
         summary_statistics["Projected 2022 Monthly Min"] = int(round(predicted_data["Predicted_Receipts"].min(),0))
@@ -53,7 +56,7 @@ class Grapher():
 
         return fig, summary_statistics
 
-    def GenerateGraphs(self,predicted_data,graph_name):
+    def GenerateGraphs(self,predicted_data):
         data_monthly = self.returnMonthlyData()
         predicted_months = pd.date_range(start=data_monthly.index[-1], periods=13, freq='M')
 
@@ -61,7 +64,26 @@ class Grapher():
                         'Predicted_Receipts': data_monthly.values[-1],
                         'Date': [pd.to_datetime(data_monthly.index[-1])]
                                 })
+        
         predicted_data = pd.concat([new_data, predicted_data])
-        graph = self.Graph(predicted_data=predicted_data,predicted_months=predicted_months,data_monthly=data_monthly,graph_name=graph_name)
+        graph = self.Graph(predicted_data=predicted_data,predicted_months=predicted_months,data_monthly=data_monthly)
 
         return graph
+
+
+    def LinearRegressionGraphs(self):
+
+        lrm = LinearProgressionPredictor(dataFileLocation=self.dataFileLocation)
+        predicted_data = lrm.predict_by_months()
+        return self.GenerateGraphs(predicted_data=predicted_data)
+
+
+    def ArimaGraphs(self):
+        arima = ArimaPredictor(dataFileLocation=self.dataFileLocation)
+        predicted_data = arima.PredictNMonths()
+        return self.GenerateGraphs(predicted_data=predicted_data)
+
+    def ProphetGraphs(self):
+        prophet = ProphetPredictor(dataFileLocation=self.dataFileLocation)
+        predicted_data = prophet.PredictNDays()
+        return self.GenerateGraphs(predicted_data=predicted_data)

@@ -2,15 +2,15 @@
 import dash
 from dash import html, dcc
 from dash.dependencies import Input, Output
-import plotly.graph_objs as go
 import pandas as pd
-from main import ArimaGraphs, ProphetGraphs, LinearRegressionGraphs
+from GenerateGraphs import Grapher
 from dash import dash_table
 from dash.dependencies import Input, Output
 
+
 # Create a Dash application
 app = dash.Dash(__name__)
-
+grapher = Grapher()
 
 
 
@@ -71,12 +71,12 @@ app.layout = html.Div([
 def update_content(selected_model):
     if selected_model == 'ARIMA':
 
-        fig, summary_stats = ArimaGraphs()
+        fig, summary_stats = grapher.ArimaGraphs()
     elif selected_model == 'Prophet':
 
-        fig, summary_stats = ProphetGraphs()
+        fig, summary_stats = grapher.ProphetGraphs()
     elif selected_model == "Linear Regression":
-        fig,summary_stats = LinearRegressionGraphs()
+        fig,summary_stats = grapher.LinearRegressionGraphs()
     else:
         # Handle other cases or default case
         return 0
