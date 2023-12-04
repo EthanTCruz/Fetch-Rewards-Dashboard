@@ -4,16 +4,28 @@ from dash import html, dcc
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 import pandas as pd
-from main import ArimaGraphs, ProphetGraphs
+from main import ArimaGraphs, ProphetGraphs, LinearRegressionGraphs
 from dash import dash_table
+from dash.dependencies import Input, Output
 
 # Create a Dash application
 app = dash.Dash(__name__)
 
 
 
+
 app.layout = html.Div([
-    html.Button('Toggle Graph', id='toggle-button', n_clicks=0),
+
+        dcc.Dropdown(
+        id='graph-dropdown',
+        options=[
+            {'label': 'ARIMA', 'value': 'ARIMA'},
+            {'label': 'Linear Regression', 'value': 'Linear Regression'},
+            {'label': 'Prophet', 'value': 'Prophet'}
+            
+        ],
+        value='ARIMA'  # Default value
+    ),
     html.Div([
         html.Div([
             dcc.Graph(id='graph')
@@ -49,22 +61,27 @@ app.layout = html.Div([
 
 
 
-
 # Define callback to update graph
 @app.callback(
-    [Output('graph', 'figure'), 
-     Output('summary-stats-actual-table', 'data'),
-     Output('summary-stats-predicted-table', 'data'),   # Update this line
-     Output('toggle-button', 'children')],
-    [Input('toggle-button', 'n_clicks')]
+    Output('graph', 'figure'),
+    Output('summary-stats-actual-table', 'data'),
+    Output('summary-stats-predicted-table', 'data'), 
+    [Input('graph-dropdown', 'value')]
 )
-def update_content(n_clicks):
-    if n_clicks % 2 == 0:
+def update_content(selected_model):
+    if selected_model == 'ARIMA':
+
         fig, summary_stats = ArimaGraphs()
-        button_label = "Show Prophet"
-    else:
+    elif selected_model == 'Prophet':
+
         fig, summary_stats = ProphetGraphs()
-        button_label = "Show ARIMA"
+    elif selected_model == "Linear Regression":
+        fig,summary_stats = LinearRegressionGraphs()
+    else:
+        # Handle other cases or default case
+        return 0
+
+
 
     # Convert summary statistics to DataFrame
     stats_df = pd.DataFrame(list(summary_stats.items()), columns=['Statistic', 'Value'])
@@ -74,7 +91,7 @@ def update_content(n_clicks):
 
 
 
-    return fig, df_2021.to_dict('records'), df_predicted.to_dict('records'), button_label
+    return fig, df_2021.to_dict('records'), df_predicted.to_dict('records')
 
 def format_number(value):
     if isinstance(value, int):
