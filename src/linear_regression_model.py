@@ -59,22 +59,9 @@ class LinearProgressionPredictor:
 
         return(predicted_df)
 
-    def predict_by_months(self,year: int = 2022):
-        predicted_df = self.predict_year(year=year)
 
-        # Summing the predicted receipts by month
-        predicted_df['Month'] = predicted_df['Date'].dt.to_period('M').dt.to_timestamp('M')
- 
-
-        monthly_sum = predicted_df.groupby('Month')['Predicted_Receipts'].sum().reset_index()
-        
-        monthly_sum['Date'] = monthly_sum['Month']
-        monthly_sum.drop(columns=['Month'], inplace=True)
-        monthly_sum.set_index('Date', inplace=True)
-        
-        return(monthly_sum)
     
-    def predict_by_months2(self,year: int = 2022):
+    def predict_by_months(self,year: int = 2022):
         predicted_df = self.predict_year(year=year)
 
         # Summing the predicted receipts by month
