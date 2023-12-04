@@ -6,13 +6,17 @@ import pandas as pd
 from GenerateGraphs import Grapher
 from dash import dash_table
 from dash.dependencies import Input, Output
-
+from flask_caching import Cache
 
 # Create a Dash application
 app = dash.Dash(__name__)
 grapher = Grapher()
 
-
+# Setup cache
+cache = Cache(app.server, config={
+    'CACHE_TYPE': 'filesystem',
+    'CACHE_DIR': 'cache-directory'
+})
 
 app.layout = html.Div([
 
@@ -58,6 +62,20 @@ app.layout = html.Div([
 
 
 
+@cache.memoize(timeout=3600)
+def generate_stats_and_figs(model_type):
+    # Your existing code to generate summary statistics based on model_type
+    if model_type == 'ARIMA':
+        fig, summary_stats = grapher.ArimaGraphs()
+    elif model_type == 'Prophet':
+
+        fig, summary_stats = grapher.ProphetGraphs()
+    elif model_type == "Linear Regression":
+        fig,summary_stats = grapher.LinearRegressionGraphs()
+    else:
+        # Handle other cases or default case
+        return 0
+    return fig, summary_stats
 
 
 
@@ -69,18 +87,7 @@ app.layout = html.Div([
     [Input('graph-dropdown', 'value')]
 )
 def update_content(selected_model):
-    if selected_model == 'ARIMA':
-
-        fig, summary_stats = grapher.ArimaGraphs()
-    elif selected_model == 'Prophet':
-
-        fig, summary_stats = grapher.ProphetGraphs()
-    elif selected_model == "Linear Regression":
-        fig,summary_stats = grapher.LinearRegressionGraphs()
-    else:
-        # Handle other cases or default case
-        return 0
-
+    fig, summary_stats = generate_stats_and_figs(model_type=selected_model)
 
 
     # Convert summary statistics to DataFrame
