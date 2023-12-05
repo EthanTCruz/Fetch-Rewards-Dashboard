@@ -1,8 +1,5 @@
-from arima_model import ArimaPredictor
-from prophet_model import ProphetPredictor
-from linear_regression_model import LinearProgressionPredictor
 from config import Settings
-
+from arima_model import ArimaPredictor
 from GenerateGraphs import Grapher
 
 s = Settings()
@@ -11,6 +8,9 @@ grapher=Grapher(dataFileLocation=dataFileLocation)
 
 
 def main():
+    # a = ArimaPredictor(dataFileLocation=dataFileLocation)
+    # a.PredictNMonths()
+    grapher.ProphetGraphs()
     return 0
 
 

@@ -2,7 +2,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from arima_model import ArimaPredictor
 from prophet_model import ProphetPredictor
-from linear_regression_model import LinearProgressionPredictor
+from linear_regression_model import LinearRegressionPredictor
 from config import Settings
 s = Settings()
 
@@ -20,6 +20,8 @@ class Grapher():
         return data_monthly
 
     def Graph(self,predicted_data, data_monthly, predicted_months: pd.DatetimeIndex):
+        CI_stats = predicted_data
+        predicted_data = predicted_data["monthly_sums"]
         summary_statistics = {}
         summary_statistics["Projected 2022 Monthly Mean"] = round(predicted_data["Predicted_Receipts"].mean(),2)
         summary_statistics["Projected 2022 Monthly Min"] = int(round(predicted_data["Predicted_Receipts"].min(),0))
@@ -38,12 +40,31 @@ class Grapher():
         fig.add_trace(go.Scatter(x=predicted_months, y=predicted_data['Predicted_Receipts'].values, 
                                 mode='lines+markers', name='Projected 2022 Data', 
                                 line=dict(color='red', dash='dash')))
+        
+        lower_ci = CI_stats["conf_int"]["lower Receipt_Count"]
+        upper_ci = CI_stats["conf_int"]["upper Receipt_Count"]
+
+                # Add lower bound of confidence interval
+        fig.add_trace(go.Scatter(x=predicted_months, y=lower_ci, 
+                                mode='lines', name='Lower Bound',
+                                line=dict(width=0),
+                                showlegend=False))
+
+        # Add upper bound of confidence interval and fill the area
+        fig.add_trace(go.Scatter(x=predicted_months, y=upper_ci, 
+                                mode='lines', name='Upper Bound',
+                                line=dict(width=0),
+                                fill='tonexty',  # Fill area between the confidence interval bounds
+                                fillcolor='rgba(255, 0, 0, 0.3)',  # Light red fill with some transparency
+                                showlegend=False))
+
+
         # Add actual data
         fig.add_trace(go.Scatter(x=data_monthly.index, y=data_monthly['Receipt_Count'].values, 
                                 mode='lines+markers', name='2021 Data',
                                 line=dict(color='blue', dash='solid')))
 
-
+        
         # Update layout
         fig.update_layout(title='Projected 2022 Monthly Scans',
                         xaxis_title='Month',
@@ -57,6 +78,8 @@ class Grapher():
         return fig, summary_statistics
 
     def GenerateGraphs(self,predicted_data):
+        temp = predicted_data
+        predicted_data = predicted_data["monthly_sum"]
         data_monthly = self.returnMonthlyData()
         predicted_months = pd.date_range(start=data_monthly.index[-1], periods=13, freq='M')
 
@@ -66,14 +89,28 @@ class Grapher():
                                 })
         
         predicted_data = pd.concat([new_data, predicted_data])
-        graph = self.Graph(predicted_data=predicted_data,predicted_months=predicted_months,data_monthly=data_monthly)
+
+        new_data = pd.DataFrame({
+                'upper Receipt_Count': data_monthly.values[-1],
+                'lower Receipt_Count': data_monthly.values[-1],
+                'Date': [pd.to_datetime(data_monthly.index[-1])]
+                        })
+        
+        new_data['Date'] = pd.to_datetime(new_data['Date'])
+        new_data.set_index('Date', inplace=True)
+
+        temp["conf_int"] = pd.concat([new_data, temp["conf_int"]], axis=0)
+
+
+        temp["monthly_sums"] = predicted_data
+        graph = self.Graph(predicted_data=temp,predicted_months=predicted_months,data_monthly=data_monthly)
 
         return graph
 
 
     def LinearRegressionGraphs(self):
 
-        lrm = LinearProgressionPredictor(dataFileLocation=self.dataFileLocation)
+        lrm = LinearRegressionPredictor(dataFileLocation=self.dataFileLocation)
         predicted_data = lrm.predict_by_months()
         return self.GenerateGraphs(predicted_data=predicted_data)
 

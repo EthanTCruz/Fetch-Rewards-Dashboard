@@ -36,8 +36,22 @@ class ProphetPredictor:
         forecast.set_index('ds', inplace=True)
 
         # Resample and sum to get monthly totals
-        monthly_forecast = forecast['yhat'].resample('M').sum()
-        monthly_forecast = monthly_forecast[12::]
+        monthly_forecast = forecast['yhat'].resample('M').sum()[12::]
+        monthly_lower = forecast['yhat_lower'].resample('M').sum()[12::]
+        monthly_upper = forecast['yhat_upper'].resample('M').sum()[12::]
+        
+
+        monthly_lower = monthly_lower.to_frame()
+        monthly_lower.columns = ['lower Receipt_Count']
+        monthly_lower = monthly_lower.reset_index().rename(columns={'ds': 'Date'})
+
+        monthly_upper = monthly_upper.to_frame()
+        monthly_upper.columns = ['upper Receipt_Count']
+        monthly_upper = monthly_upper.reset_index().rename(columns={'ds': 'Date'})
+
+        ci_bounds = pd.merge(monthly_lower, monthly_upper, on='Date', suffixes=('_lower', '_upper'))
+        ci_bounds['Date'] = pd.to_datetime(ci_bounds['Date'])
+        ci_bounds.set_index('Date', inplace=True)
 
         df = monthly_forecast.reset_index()
 
@@ -47,5 +61,10 @@ class ProphetPredictor:
         # Convert the 'Date' column to datetime type if it's not already
         df['Date'] = pd.to_datetime(df['Date'])
         # Display the monthly forecast
-        return df
+        # results = {"monthly_sum":monthly_sum,
+        #            "mean":predicted_mean,
+        #            "conf_int":predicted_conf_int}
+        results = {"monthly_sum":df,
+                   "conf_int":ci_bounds}
+        return results
 

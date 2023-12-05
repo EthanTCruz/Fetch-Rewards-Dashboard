@@ -7,10 +7,13 @@ from GenerateGraphs import Grapher
 from dash import dash_table
 from dash.dependencies import Input, Output
 from flask_caching import Cache
+from config import Settings
+
 
 # Create a Dash application
 app = dash.Dash(__name__)
 grapher = Grapher()
+s= Settings()
 
 # Setup cache
 cache = Cache(app.server, config={
@@ -23,8 +26,8 @@ app.layout = html.Div([
         dcc.Dropdown(
         id='graph-dropdown',
         options=[
-            {'label': 'ARIMA', 'value': 'ARIMA'},
             {'label': 'Linear Regression', 'value': 'Linear Regression'},
+            {'label': 'ARIMA', 'value': 'ARIMA'},
             {'label': 'Prophet', 'value': 'Prophet'}
             
         ],
@@ -44,7 +47,7 @@ app.layout = html.Div([
                     style_cell={'textAlign': 'center'},  # Center-align text in all cells
                     # Add any other properties and styling for your DataTable here
                 )
-            ], style={'margin-bottom': '20px'}),
+            ], style={'marginBottom': '20px'}),
 
             html.Div([
                 dash_table.DataTable(
@@ -55,14 +58,14 @@ app.layout = html.Div([
                     # Add any other properties and styling for your DataTable here
                 )
             ])
-        ], style={'width': '30%', 'display': 'inline-block', 'vertical-align': 'middle'})
+        ], style={'width': '30%', 'display': 'inline-block', 'verticalAlign': 'middle'})
     ], style={'display': 'flex'})
 ])
 
 
 
 
-@cache.memoize(timeout=3600)
+@cache.memoize(timeout=10)
 def generate_stats_and_figs(model_type):
     # Your existing code to generate summary statistics based on model_type
     if model_type == 'ARIMA':
@@ -112,6 +115,6 @@ def format_number(value):
         return value
 
 
-# Run the app
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, host=s.HOST, port=8050)
+
