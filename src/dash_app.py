@@ -13,6 +13,8 @@ from config import Settings
 # Create a Dash application
 grapher = Grapher()
 grapher.ArimaGraphs()
+grapher.RNNGraphs(refresh_data=True)
+grapher.LSTMGraphs(refresh_data=True)
 app = dash.Dash(__name__)
 s= Settings()
 
@@ -29,7 +31,8 @@ app.layout = html.Div([
         options=[
             {'label': 'ARIMA', 'value': 'ARIMA'},
             {'label': 'Linear Regression', 'value': 'Linear Regression'},
-            {'label': 'Recurrent Neural Network', 'value': 'RNN'},
+            {'label': 'Simple Recurrent Neural Network', 'value': 'RNN'},
+            {'label': 'LSTM Recurrent Neural Network', 'value': 'lstm'},
             {'label': 'Prophet', 'value': 'Prophet'}
             
         ],
@@ -73,12 +76,13 @@ def generate_stats_and_figs(model_type):
     if model_type == 'ARIMA':
         fig, summary_stats = grapher.ArimaGraphs()
     elif model_type == 'Prophet':
-
         fig, summary_stats = grapher.ProphetGraphs()
     elif model_type == "Linear Regression":
         fig,summary_stats = grapher.LinearRegressionGraphs()
     elif model_type == "RNN":
         fig,summary_stats = grapher.RNNGraphs()
+    elif model_type == "lstm":
+        fig,summary_stats = grapher.LSTMGraphs()
     else:
         # Handle other cases or default case
         return 0

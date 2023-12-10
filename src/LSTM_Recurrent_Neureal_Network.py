@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import SimpleRNN, Dense
+from tensorflow.keras.layers import LSTM, Dense
 import pandas as pd
 import numpy as np
 from config import Settings
@@ -10,7 +10,7 @@ import random
 
 s = Settings()
 
-class RNNPredictor:
+class LSTMPredictor:
     def __init__(self,dataFileLocation: str = s.dataFileLocation,step_size: int = 7) -> None:
         self.dataFileLocation = dataFileLocation
         self.step_size = step_size
@@ -47,7 +47,7 @@ class RNNPredictor:
         X, y = self.create_sequences(data['Normalized_Receipt_Count'].values, n_steps)
 
         # Split the data into training and testing sets (90% training, 10% testing)
-        train_size = int(len(X) * 0.75)
+        train_size = int(len(X) * 0.6)
         X_train, X_test = X[:train_size], X[train_size:]
         y_train, y_test = y[:train_size], y[train_size:]
 
@@ -66,15 +66,16 @@ class RNNPredictor:
         time_steps = self.step_size
         n_features = 1
         model = Sequential()
-        model.add(SimpleRNN(50, activation='relu', return_sequences=True, input_shape=(time_steps, n_features)))
-        model.add(SimpleRNN(50, activation='relu'))
+        model.add(LSTM(50, activation='tanh', return_sequences=True, input_shape=(time_steps, n_features)))
+        model.add(LSTM(50, activation='tanh'))
         model.add(Dense(self.step_size))
         model.compile(optimizer='adam', loss='mse')
 
         model.fit(X_train, y_train, epochs=100, batch_size=32)
+        #denormalize/normalize for evaluation?
         loss = model.evaluate(X_test, y_test)
         predictions = model.predict(X_test)
-        tf.keras.models.save_model(model=model,filepath=s.RNNModelFile)
+        tf.keras.models.save_model(model=model,filepath=s.LSTMModelFile)
         return model
 
     def clean_data(self):
@@ -87,22 +88,12 @@ class RNNPredictor:
         data_csv['Normalized_Receipt_Count'] = (data_csv['Receipt_Count'] - d_min) / (d_max - d_min)
         return d_min,d_max,data_csv
 
-    def column_month_summation(self,df,column_name,start_date: str ='2022-01-01'):
-
-        temp_df = pd.DataFrame({'Date': pd.date_range(start=start_date, periods=365, freq='D'),
-                            'Predicted_Receipts': df[column_name]})
-        df['Month'] = temp_df['Date'].dt.to_period('M').dt.to_timestamp('M')
-        monthly_sum = df.groupby('Month')[column_name].sum().reset_index()
-        monthly_sum['Date'] = monthly_sum['Month']
-        monthly_sum.drop(columns=['Month'], inplace=True)
-        df = monthly_sum
-        return df
 
     def predict(self,train_model:bool = True):
         if train_model:
             model = self.Train_Model()
         else:
-            model = tf.keras.models.load_model(filepath=s.RNNModelFile)
+            model = tf.keras.models.load_model(filepath=s.LSTMModelFile)
 
         # Normalize the Receipt_Count column
         d_min,d_max,data_csv = self.clean_data()
