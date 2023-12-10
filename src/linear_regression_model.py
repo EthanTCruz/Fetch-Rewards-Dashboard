@@ -1,5 +1,7 @@
 import pandas as pd
 import scipy.stats as stats
+import plotly.graph_objects as go
+import plotly.express as px
 
 class LinearRegressionPredictor:
     def __init__(self,dataFileLocation: str) -> None:
@@ -44,8 +46,13 @@ class LinearRegressionPredictor:
         se_beta_one = (sigma_squared / ss_xx) ** 0.5
         t_statistic = stats.t.ppf(0.975, dof)  # two-tailed test
 
+        s = (sum((y - y_mean)**2 for y in data['Receipt_Count'])/(dof)) ** 0.5
+        seb1 = (s/(sum((x - x_mean)**2 for x in data['Days_Since_Start'])))
+
         ci_beta_zero = (beta_zero - t_statistic * se_beta_zero, beta_zero + t_statistic * se_beta_zero)
         ci_beta_one = (beta_one - t_statistic * se_beta_one, beta_one + t_statistic * se_beta_one)
+
+
 
         coefficients = {
             "b0": beta_zero,
@@ -89,7 +96,9 @@ class LinearRegressionPredictor:
     def predict_by_months(self,year: int = 2022):
         temp = self.predict_year(year=year)
         predicted_df = temp["Predicted_Receipts"]
-        # Summing the predicted receipts by month
+
+
+
         predicted_df['Month'] = predicted_df['Date'].dt.to_period('M').dt.to_timestamp('M')
         monthly_sum = predicted_df.groupby('Month')['Predicted_Receipts'].sum().reset_index()
         

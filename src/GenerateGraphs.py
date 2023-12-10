@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 from arima_model import ArimaPredictor
 from prophet_model import ProphetPredictor
 from linear_regression_model import LinearRegressionPredictor
+from Recurrent_Neureal_Network import RNNPredictor
 from config import Settings
 s = Settings()
 
@@ -40,23 +41,24 @@ class Grapher():
         fig.add_trace(go.Scatter(x=predicted_months, y=predicted_data['Predicted_Receipts'].values, 
                                 mode='lines+markers', name='Projected 2022 Data', 
                                 line=dict(color='red', dash='dash')))
-        
-        lower_ci = CI_stats["conf_int"]["lower Receipt_Count"]
-        upper_ci = CI_stats["conf_int"]["upper Receipt_Count"]
+        conf_key = "conf_int"
+        if CI_stats.get(conf_key) is not None:
+            lower_ci = CI_stats["conf_int"]["lower Receipt_Count"]
+            upper_ci = CI_stats["conf_int"]["upper Receipt_Count"]
 
-                # Add lower bound of confidence interval
-        fig.add_trace(go.Scatter(x=predicted_months, y=lower_ci, 
-                                mode='lines', name='Lower Bound',
-                                line=dict(width=0),
-                                showlegend=False))
+                    # Add lower bound of confidence interval
+            fig.add_trace(go.Scatter(x=predicted_months, y=lower_ci, 
+                                    mode='lines', name='Lower Bound',
+                                    line=dict(width=0),
+                                    showlegend=False))
 
-        # Add upper bound of confidence interval and fill the area
-        fig.add_trace(go.Scatter(x=predicted_months, y=upper_ci, 
-                                mode='lines', name='Upper Bound',
-                                line=dict(width=0),
-                                fill='tonexty',  # Fill area between the confidence interval bounds
-                                fillcolor='rgba(255, 0, 0, 0.3)',  # Light red fill with some transparency
-                                showlegend=False))
+            # Add upper bound of confidence interval and fill the area
+            fig.add_trace(go.Scatter(x=predicted_months, y=upper_ci, 
+                                    mode='lines', name='Upper Bound',
+                                    line=dict(width=0),
+                                    fill='tonexty',  # Fill area between the confidence interval bounds
+                                    fillcolor='rgba(255, 0, 0, 0.3)',  # Light red fill with some transparency
+                                    showlegend=False))
 
 
         # Add actual data
@@ -89,17 +91,18 @@ class Grapher():
                                 })
         
         predicted_data = pd.concat([new_data, predicted_data])
+        conf_key = "conf_int"
+        if temp.get(conf_key) is not None:
+            new_data = pd.DataFrame({
+                    'upper Receipt_Count': data_monthly.values[-1],
+                    'lower Receipt_Count': data_monthly.values[-1],
+                    'Date': [pd.to_datetime(data_monthly.index[-1])]
+                            })
+            
+            new_data['Date'] = pd.to_datetime(new_data['Date'])
+            new_data.set_index('Date', inplace=True)
 
-        new_data = pd.DataFrame({
-                'upper Receipt_Count': data_monthly.values[-1],
-                'lower Receipt_Count': data_monthly.values[-1],
-                'Date': [pd.to_datetime(data_monthly.index[-1])]
-                        })
-        
-        new_data['Date'] = pd.to_datetime(new_data['Date'])
-        new_data.set_index('Date', inplace=True)
-
-        temp["conf_int"] = pd.concat([new_data, temp["conf_int"]], axis=0)
+            temp["conf_int"] = pd.concat([new_data, temp["conf_int"]], axis=0)
 
 
         temp["monthly_sums"] = predicted_data
@@ -109,11 +112,9 @@ class Grapher():
 
 
     def LinearRegressionGraphs(self):
-
         lrm = LinearRegressionPredictor(dataFileLocation=self.dataFileLocation)
         predicted_data = lrm.predict_by_months()
         return self.GenerateGraphs(predicted_data=predicted_data)
-
 
     def ArimaGraphs(self):
         arima = ArimaPredictor(dataFileLocation=self.dataFileLocation)
@@ -123,4 +124,9 @@ class Grapher():
     def ProphetGraphs(self):
         prophet = ProphetPredictor(dataFileLocation=self.dataFileLocation)
         predicted_data = prophet.PredictNDays()
+        return self.GenerateGraphs(predicted_data=predicted_data)
+
+    def RNNGraphs(self):
+        rnn = RNNPredictor()
+        predicted_data = rnn.Predict()
         return self.GenerateGraphs(predicted_data=predicted_data)

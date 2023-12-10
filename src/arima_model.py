@@ -1,10 +1,14 @@
 from statsmodels.tsa.arima.model import ARIMA
 import numpy as np
 import pandas as pd
+import pmdarima as pm
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+from config import Settings
+s = Settings()
 
 
 class ArimaPredictor:
-    def __init__(self,dataFileLocation: str) -> None:
+    def __init__(self,dataFileLocation: str = s.dataFileLocation) -> None:
         self.dataFileLocation = dataFileLocation
 
     def column_month_summation(self,df,column_name,start_date: str ='2022-01-01'):
@@ -19,13 +23,47 @@ class ArimaPredictor:
         return df
 
 
-    def PredictNMonths(self,start_date: str = '2022-01-01',p: int = 1,q: int = 1,d: int = 1):
+    def calc_arima_parameters(self):
         data_csv = pd.read_csv(self.dataFileLocation)
 
         data_csv['Date'] = pd.to_datetime(data_csv['# Date'])
         data_csv.drop(columns=['# Date'], inplace=True)
 
-        model = ARIMA(data_csv['Receipt_Count'], order=(p, d, q))
+        model = pm.auto_arima(data_csv['Receipt_Count'], start_p=1, start_q=1,
+                      test='adf',       # use adftest to find optimal 'd'
+                      max_p=3, max_q=3, # maximum p and q
+                      m=3,              # frequency of series
+                      d=None,           # let model determine 'd'
+                      seasonal=True,   # No Seasonality
+                      start_P=0, 
+                      D=0, 
+                      trace=True,
+                      error_action='ignore',  
+                      suppress_warnings=True, 
+                      stepwise=True)
+
+
+        p, d, q = model.order
+
+        # If you used seasonality
+        if model.seasonal_order:
+            P, D, Q, m = model.seasonal_order
+        else:
+            P, D, Q, m = 0,0,0,0
+        s.arima_order = p,d,Q
+        s.arima_seasonal_order = P, D, Q, m
+
+    def PredictNMonths(self,start_date: str = '2022-01-01',p: int = 2,q: int = 0,d: int = 2):
+        data_csv = pd.read_csv(self.dataFileLocation)
+
+        data_csv['Date'] = pd.to_datetime(data_csv['# Date'])
+        data_csv.drop(columns=['# Date'], inplace=True)
+
+        if s.arima_order == s.arima_default or s.arima_seasonal_order == s.arima_default:
+            self.calc_arima_parameters()
+
+
+        model = SARIMAX(data_csv['Receipt_Count'], order=(s.arima_order),seasonal_order=(s.arima_seasonal_order))
 
         # Fit the model
         arima_result = model.fit()
@@ -48,19 +86,7 @@ class ArimaPredictor:
         predicted_conf_int.set_index('Date', inplace=True)
 
         
-        #forecast = predictions_2022.predicted_mean
-        #conf_int = predictions_2022.conf_int(alpha=0.05)
 
-        # Creating a DataFrame for the predictions to display them neatly
-        #predictions_2022_df = pd.DataFrame({'Date': pd.date_range(start=start_date, periods=365, freq='D'),
-        #                                    'Predicted_Receipts': predictions_2022})
-
-
-
-        # predictions_2022_df['Month'] = ci_upper_predictions_2022_df['Date'].dt.to_period('M').dt.to_timestamp('M')
-        # monthly_sum = predictions_2022_df.groupby('Month')['Predicted_Receipts'].sum().reset_index()
-        # monthly_sum['Date'] = monthly_sum['Month']
-        # monthly_sum.drop(columns=['Month'], inplace=True)
 
         df = predictions_2022.to_frame()
 

@@ -11,8 +11,9 @@ from config import Settings
 
 
 # Create a Dash application
-app = dash.Dash(__name__)
 grapher = Grapher()
+grapher.ArimaGraphs()
+app = dash.Dash(__name__)
 s= Settings()
 
 # Setup cache
@@ -26,12 +27,13 @@ app.layout = html.Div([
         dcc.Dropdown(
         id='graph-dropdown',
         options=[
-            {'label': 'Linear Regression', 'value': 'Linear Regression'},
             {'label': 'ARIMA', 'value': 'ARIMA'},
+            {'label': 'Linear Regression', 'value': 'Linear Regression'},
+            {'label': 'Recurrent Neural Network', 'value': 'RNN'},
             {'label': 'Prophet', 'value': 'Prophet'}
             
         ],
-        value='ARIMA'  # Default value
+        value='Prophet'  # Default value
     ),
     html.Div([
         html.Div([
@@ -75,6 +77,8 @@ def generate_stats_and_figs(model_type):
         fig, summary_stats = grapher.ProphetGraphs()
     elif model_type == "Linear Regression":
         fig,summary_stats = grapher.LinearRegressionGraphs()
+    elif model_type == "RNN":
+        fig,summary_stats = grapher.RNNGraphs()
     else:
         # Handle other cases or default case
         return 0
@@ -116,5 +120,5 @@ def format_number(value):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, host=s.HOST, port=8050)
+    app.run_server(debug=False, host=s.HOST, port=8050)
 
