@@ -17,12 +17,9 @@ class LinearRegressionPredictor:
     
     def generate_coefficients(self):
         data = self.returnDailyData() 
-
         data['Date'] = pd.to_datetime(data['Date'])
-
-        # Subtract the first date and convert to days, then add 1
         data['Days_Since_Start'] = (data['Date'] - data['Date'].iloc[0]).dt.days
-        #sum_of_squared_deviations = sum((x - mean) ** 2 for x in data)
+
 
         x_mean = data['Days_Since_Start'].mean()
         y_mean = data['Receipt_Count'].mean()
@@ -34,10 +31,10 @@ class LinearRegressionPredictor:
         beta_zero = y_mean - beta_one*x_mean
 
         n = len(data)
-        p = 2  # number of parameters (intercept and slope)
-        dof = n - p  # degrees of freedom
+        p = 2
+        dof = n - p
 
-        # Calculate standard error
+
         y_pred = beta_zero + beta_one * data['Days_Since_Start']
         residual = data['Receipt_Count'] - y_pred
         residual_sum_of_squares = sum(residual**2)
@@ -67,20 +64,13 @@ class LinearRegressionPredictor:
     def predict_year(self, year: int = 2022):
         coefficients = self.generate_coefficients()
         data = self.returnDailyData() 
-        # Example original DataFrame
         data['Date'] = pd.to_datetime(data['Date'])
-
-        # Find the start date of the original DataFrame
         start_date = data['Date'].min()
-
-        # Specify the year for the new DataFrame
         year = 2022
 
-        # Create a DataFrame for all days in the specified year
         date_range = pd.date_range(start=f"{year}-01-01", end=f"{year}-12-31", freq='D')
         predicted_df = pd.DataFrame(date_range, columns=['Date'])
         
-        # Calculate the number of days away from the start date
         predicted_df['Days_From_Start'] = (predicted_df['Date'] - start_date).dt.days
         predicted_df["Predicted_Receipts"] = (coefficients["b0"] + predicted_df['Days_From_Start'] * coefficients["b1"])
         ci_bounds = predicted_df
@@ -97,12 +87,9 @@ class LinearRegressionPredictor:
         temp = self.predict_year(year=year)
         predicted_df = temp["Predicted_Receipts"]
 
-
-
         predicted_df['Month'] = predicted_df['Date'].dt.to_period('M').dt.to_timestamp('M')
         monthly_sum = predicted_df.groupby('Month')['Predicted_Receipts'].sum().reset_index()
         
-
         ci_bounds = temp["conf_int"]
         ci_bounds['Month'] = ci_bounds['Date'].dt.to_period('M').dt.to_timestamp('M')
         upper_monthly_sum = ci_bounds.groupby('Month')['upper Receipt_Count'].sum().reset_index()
@@ -120,8 +107,5 @@ class LinearRegressionPredictor:
         results = {"monthly_sum":df_reset,
                    "conf_int":ci_bounds
                    }
-        # results = {"monthly_sum":monthly_sum,
-        #            "mean":predicted_mean,
-        #            "conf_int":predicted_conf_int}
         return(results)
     

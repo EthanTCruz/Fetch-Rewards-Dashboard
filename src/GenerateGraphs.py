@@ -116,77 +116,86 @@ class Grapher():
         return graph
 
 
-    def LinearRegressionGraphs(self):
-        lrm = LinearRegressionPredictor(dataFileLocation=self.dataFileLocation)
-        predicted_data = lrm.predict_by_months()
+
+    
+    def Predicted_Data_Exists(self,predicted_file):
+        with open(predicted_file, 'r') as json_file:
+
+            predicted_data = json.load(json_file)
+            json_str = predicted_data["monthly_sum"]
+            df = pd.DataFrame(json.loads(json_str))
+            df['Date'] = pd.to_datetime(df['Date'], unit='ms')
+            predicted_data["monthly_sum"] = df
+            conf_key = "conf_int"
+
+            if predicted_data.get(conf_key) is not None:
+                json_str = predicted_data[conf_key]
+                df = pd.DataFrame(json.loads(json_str))
+                df['Date'] = pd.to_datetime(pd.to_numeric(df.index), unit='ms')
+                df = df.set_index('Date')
+                predicted_data[conf_key] = df
+        return predicted_data
+    
+    def No_Predicted_Data_Exists(self,predicted_data,predicted_file):
+        with open(predicted_file, 'w') as json_file:
+            temp = predicted_data.copy()
+            temp["monthly_sum"] = temp["monthly_sum"].to_json()
+            conf_key = "conf_int"
+            if temp.get(conf_key) is not None:
+                temp[conf_key] = temp[conf_key].to_json()
+
+            json.dump(temp, json_file)
+        return predicted_data
+
+    def LinearRegressionGraphs(self,refresh_data: bool = False):
+        path = Path(s.linear_regression_prediction)
+        if path.exists() and not refresh_data:
+            predicted_data = self.Predicted_Data_Exists(predicted_file=s.linear_regression_prediction)
+        else:
+            lrm = LinearRegressionPredictor(dataFileLocation=self.dataFileLocation)
+            predicted_data = lrm.predict_by_months()
+            self.No_Predicted_Data_Exists(predicted_data=predicted_data,predicted_file=s.linear_regression_prediction)
         return self.GenerateGraphs(predicted_data=predicted_data)
 
-    def ArimaGraphs(self):
-        arima = ArimaPredictor(dataFileLocation=self.dataFileLocation)
-        predicted_data = arima.PredictNMonths()
+    def ArimaGraphs(self,refresh_data: bool = False):
+        path = Path(s.arima_prediction)
+        if path.exists() and not refresh_data:
+            predicted_data = self.Predicted_Data_Exists(predicted_file=s.arima_prediction)
+        else:
+                prophet = ArimaPredictor(dataFileLocation=self.dataFileLocation)
+                predicted_data = prophet.PredictNMonths()
+                self.No_Predicted_Data_Exists(predicted_data=predicted_data,predicted_file=s.arima_prediction)
         return self.GenerateGraphs(predicted_data=predicted_data)
 
-    def ProphetGraphs(self):
-        prophet = ProphetPredictor(dataFileLocation=self.dataFileLocation)
-        predicted_data = prophet.PredictNDays()
+    def ProphetGraphs(self,refresh_data: bool = False):
+        path = Path(s.prophet_prediction)
+        if path.exists() and not refresh_data:
+            predicted_data = self.Predicted_Data_Exists(predicted_file=s.prophet_prediction)
+        else:
+                prophet = ProphetPredictor(dataFileLocation=self.dataFileLocation)
+                predicted_data = prophet.PredictNDays()
+                self.No_Predicted_Data_Exists(predicted_data=predicted_data,predicted_file=s.prophet_prediction)
         return self.GenerateGraphs(predicted_data=predicted_data)
+
 
     def RNNGraphs(self,refresh_data: bool = False):
         path = Path(s.simple_rnn_prediction)
         if path.exists() and not refresh_data:
-            with open(s.simple_rnn_prediction, 'r') as json_file:
-                predicted_data = json.load(json_file)
-                json_str = predicted_data["monthly_sum"]
-                df = pd.DataFrame(json.loads(json_str))
-
-                # Converting the 'Date' column from Unix timestamp (in milliseconds) to datetime
-                df['Date'] = pd.to_datetime(df['Date'], unit='ms')
-                predicted_data["monthly_sum"] = df
-                conf_key = "conf_int"
-                if predicted_data.get(conf_key) is not None:
-                    predicted_data[conf_key] = df[conf_key].to_json()
-
+            predicted_data = self.Predicted_Data_Exists(predicted_file=s.simple_rnn_prediction)
         else:
-            with open(s.simple_rnn_prediction, 'w') as json_file:
                 rnn = RNNPredictor()
                 predicted_data = rnn.predict()
-                temp = predicted_data.copy()
-                temp["monthly_sum"] = temp["monthly_sum"].to_json()
-                conf_key = "conf_int"
-                if temp.get(conf_key) is not None:
-                    temp[conf_key] = temp[conf_key].to_json()
-
-                json.dump(temp, json_file)
-
+                self.No_Predicted_Data_Exists(predicted_data=predicted_data,predicted_file=s.simple_rnn_prediction)
         return self.GenerateGraphs(predicted_data=predicted_data)
+
     
 
     def LSTMGraphs(self,refresh_data: bool = False):
         path = Path(s.simple_rnn_prediction)
         if path.exists() and not refresh_data:
-            with open(s.lstm_rnn_prediction, 'r') as json_file:
-                predicted_data = json.load(json_file)
-                json_str = predicted_data["monthly_sum"]
-                df = pd.DataFrame(json.loads(json_str))
-
-                # Converting the 'Date' column from Unix timestamp (in milliseconds) to datetime
-                df['Date'] = pd.to_datetime(df['Date'], unit='ms')
-                predicted_data["monthly_sum"] = df
-                conf_key = "conf_int"
-                if predicted_data.get(conf_key) is not None:
-                    predicted_data[conf_key] = df[conf_key].to_json()
-
+            predicted_data = self.Predicted_Data_Exists(predicted_file=s.lstm_rnn_prediction)
         else:
-            with open(s.lstm_rnn_prediction, 'w') as json_file:
-                lstm = LSTMPredictor()
-                predicted_data = lstm.predict()
-                temp = predicted_data.copy()
-                temp["monthly_sum"] = temp["monthly_sum"].to_json()
-                conf_key = "conf_int"
-                if temp.get(conf_key) is not None:
-                    temp[conf_key] = temp[conf_key].to_json()
-
-                json.dump(temp, json_file)
-
+                l = LSTMPredictor()
+                predicted_data = l.predict()
+                self.No_Predicted_Data_Exists(predicted_data=predicted_data,predicted_file=s.lstm_rnn_prediction)
         return self.GenerateGraphs(predicted_data=predicted_data)
-    

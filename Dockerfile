@@ -21,4 +21,4 @@ ENV dataFileLocation ./data/data_daily.csv
 ENV HOST "0.0.0.0"
 
 # Run dash_app.py when the container launches
-CMD ["python", "./src/dash_app.py"]
+CMD ["python", "./src/"]

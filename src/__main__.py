@@ -8,13 +8,27 @@ from dash import dash_table
 from dash.dependencies import Input, Output
 from flask_caching import Cache
 from config import Settings
+import cowsay
+
 
 
 # Create a Dash application
 grapher = Grapher()
-grapher.ArimaGraphs()
+
+cowsay.cow("Creating Arima Model")
+grapher.ArimaGraphs(refresh_data=True)
+
+cowsay.cow("Creating Linear and Prophet Models")
+grapher.LinearRegressionGraphs(refresh_data=True)
+grapher.ProphetGraphs(refresh_data=True)
+
+cowsay.cow("Creating Simple RNN Model")
 grapher.RNNGraphs(refresh_data=True)
+
+cowsay.cow("Creating LSTM Model")
 grapher.LSTMGraphs(refresh_data=True)
+
+
 app = dash.Dash(__name__)
 s= Settings()
 
@@ -25,18 +39,16 @@ cache = Cache(app.server, config={
 })
 
 app.layout = html.Div([
-
         dcc.Dropdown(
         id='graph-dropdown',
         options=[
-            {'label': 'ARIMA', 'value': 'ARIMA'},
-            {'label': 'Linear Regression', 'value': 'Linear Regression'},
-            {'label': 'Simple Recurrent Neural Network', 'value': 'RNN'},
             {'label': 'LSTM Recurrent Neural Network', 'value': 'lstm'},
-            {'label': 'Prophet', 'value': 'Prophet'}
-            
+            {'label': 'Simple Recurrent Neural Network', 'value': 'RNN'},
+            {'label': 'ARIMA', 'value': 'ARIMA'},
+            {'label': 'Prophet', 'value': 'Prophet'},
+            {'label': 'Linear Regression', 'value': 'Linear Regression'}
         ],
-        value='Prophet'  # Default value
+        value='lstm'  # Default value
     ),
     html.Div([
         html.Div([
@@ -49,8 +61,7 @@ app.layout = html.Div([
                     id='summary-stats-predicted-table',
                     columns=[{'name': '2022 Predicted Statistics', 'id': 'Statistic'},
                              {'name': 'Value', 'id': 'Value'}],
-                    style_cell={'textAlign': 'center'},  # Center-align text in all cells
-                    # Add any other properties and styling for your DataTable here
+                    style_cell={'textAlign': 'center'},
                 )
             ], style={'marginBottom': '20px'}),
 
@@ -59,8 +70,7 @@ app.layout = html.Div([
                     id='summary-stats-actual-table',
                     columns=[{'name': '2021 Actual Statistics', 'id': 'Statistic'},
                              {'name': 'Value', 'id': 'Value'}],
-                    style_cell={'textAlign': 'center'},  # Center-align text in all cells
-                    # Add any other properties and styling for your DataTable here
+                    style_cell={'textAlign': 'center'}, 
                 )
             ])
         ], style={'width': '30%', 'display': 'inline-block', 'verticalAlign': 'middle'})
@@ -84,13 +94,11 @@ def generate_stats_and_figs(model_type):
     elif model_type == "lstm":
         fig,summary_stats = grapher.LSTMGraphs()
     else:
-        # Handle other cases or default case
         return 0
     return fig, summary_stats
 
 
 
-# Define callback to update graph
 @app.callback(
     Output('graph', 'figure'),
     Output('summary-stats-actual-table', 'data'),
@@ -100,29 +108,23 @@ def generate_stats_and_figs(model_type):
 def update_content(selected_model):
     fig, summary_stats = generate_stats_and_figs(model_type=selected_model)
 
-
-    # Convert summary statistics to DataFrame
     stats_df = pd.DataFrame(list(summary_stats.items()), columns=['Statistic', 'Value'])
     stats_df['Value'] = stats_df['Value'].apply(format_number)  # Format numbers
     df_2021 = stats_df[stats_df['Statistic'].str.startswith('2021')]
     df_predicted = stats_df[~stats_df['Statistic'].str.startswith('2021')]
 
-
-
     return fig, df_2021.to_dict('records'), df_predicted.to_dict('records')
 
 def format_number(value):
     if isinstance(value, int):
-        # Format integers without decimal places
         return f"{value:,}"
     elif isinstance(value, float):
-        # Format floats with two decimal places
         return f"{value:,.2f}"
     else:
-        # Return non-numeric values as is
         return value
 
 
 if __name__ == '__main__':
+    cowsay.cow("App is now ready to use")
     app.run_server(debug=False, host=s.HOST, port=8050)
 

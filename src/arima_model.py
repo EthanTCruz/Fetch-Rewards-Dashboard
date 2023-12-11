@@ -1,9 +1,14 @@
-from statsmodels.tsa.arima.model import ARIMA
-import numpy as np
 import pandas as pd
 import pmdarima as pm
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from config import Settings
+import logging
+import warnings
+warnings.simplefilter('ignore', category=UserWarning)
+logging.getLogger('statsmodels').setLevel(logging.ERROR)
+logging.getLogger('pmdarima').setLevel(logging.ERROR)
+
+
 s = Settings()
 
 
@@ -37,15 +42,12 @@ class ArimaPredictor:
                       seasonal=True,   # No Seasonality
                       start_P=0, 
                       D=0, 
-                      trace=True,
+                      trace=False,
                       error_action='ignore',  
                       suppress_warnings=True, 
                       stepwise=True)
 
-
         p, d, q = model.order
-
-        # If you used seasonality
         if model.seasonal_order:
             P, D, Q, m = model.seasonal_order
         else:
@@ -62,37 +64,24 @@ class ArimaPredictor:
         if s.arima_order == s.arima_default or s.arima_seasonal_order == s.arima_default:
             self.calc_arima_parameters()
 
-
         model = SARIMAX(data_csv['Receipt_Count'], order=(s.arima_order),seasonal_order=(s.arima_seasonal_order))
+        arima_result = model.fit(disp=False)
 
-        # Fit the model
-        arima_result = model.fit()
-
-        # Making predictions for 2022 (12 months)
         predictions_2022 = arima_result.forecast(steps=365)
         forecast = arima_result.get_forecast(steps=365)
         predicted_conf_int = forecast.conf_int(alpha=0.05)
 
-
-
-        
-
         ci_lower_predictions_2022_df = self.column_month_summation(df=predicted_conf_int,column_name="upper Receipt_Count")
-
-
         ci_upper_predictions_2022_df = self.column_month_summation(df=predicted_conf_int,column_name="lower Receipt_Count")
 
         predicted_conf_int = pd.merge(ci_lower_predictions_2022_df, ci_upper_predictions_2022_df, on='Date', suffixes=('_lower', '_upper'))
         predicted_conf_int.set_index('Date', inplace=True)
 
-        
-
-
         df = predictions_2022.to_frame()
-
-        # Now, rename the column
         df.columns = ['Predicted_Receipts']
         monthly_sum = self.column_month_summation(df=df,column_name='Predicted_Receipts')
+
         results = {"monthly_sum":monthly_sum,
                    "conf_int":predicted_conf_int}
+        
         return (results)  # rounding off to nearest whole number for readability

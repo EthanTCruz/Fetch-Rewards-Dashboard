@@ -7,6 +7,8 @@ from config import Settings
 import math
 from tqdm import tqdm
 import random
+import logging
+tf.get_logger().setLevel(logging.ERROR)
 
 s = Settings()
 
@@ -38,23 +40,15 @@ class RNNPredictor:
         return np.array(X), np.array(y)
 
     def split_data(self,data):
-
-
-        # Define the number of time steps
         n_steps = self.step_size
-
-        # Create sequences
         X, y = self.create_sequences(data['Normalized_Receipt_Count'].values, n_steps)
 
-        # Split the data into training and testing sets (90% training, 10% testing)
-        train_size = int(len(X) * 0.75)
+        train_size = int(len(X) * 0.8)
         X_train, X_test = X[:train_size], X[train_size:]
         y_train, y_test = y[:train_size], y[train_size:]
 
-        # Reshape input for RNN
         X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
         X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], 1))
-
 
         return X_train, X_test, y_train, y_test
 
@@ -63,17 +57,19 @@ class RNNPredictor:
         random.seed(3141)
         d_min,d_max,data_csv = self.clean_data()
         X_train, X_test, y_train, y_test = self.split_data(data=data_csv)
+
         time_steps = self.step_size
         n_features = 1
+
         model = Sequential()
         model.add(SimpleRNN(50, activation='relu', return_sequences=True, input_shape=(time_steps, n_features)))
         model.add(SimpleRNN(50, activation='relu'))
         model.add(Dense(self.step_size))
         model.compile(optimizer='adam', loss='mse')
 
-        model.fit(X_train, y_train, epochs=100, batch_size=32)
-        loss = model.evaluate(X_test, y_test)
-        predictions = model.predict(X_test)
+        model.fit(X_train, y_train, epochs=100, batch_size=32,verbose=0)
+        #loss = model.evaluate(X_test, y_test)
+        #predictions = model.predict(X_test)
         tf.keras.models.save_model(model=model,filepath=s.RNNModelFile)
         return model
 
@@ -87,28 +83,13 @@ class RNNPredictor:
         data_csv['Normalized_Receipt_Count'] = (data_csv['Receipt_Count'] - d_min) / (d_max - d_min)
         return d_min,d_max,data_csv
 
-    def column_month_summation(self,df,column_name,start_date: str ='2022-01-01'):
-
-        temp_df = pd.DataFrame({'Date': pd.date_range(start=start_date, periods=365, freq='D'),
-                            'Predicted_Receipts': df[column_name]})
-        df['Month'] = temp_df['Date'].dt.to_period('M').dt.to_timestamp('M')
-        monthly_sum = df.groupby('Month')[column_name].sum().reset_index()
-        monthly_sum['Date'] = monthly_sum['Month']
-        monthly_sum.drop(columns=['Month'], inplace=True)
-        df = monthly_sum
-        return df
-
     def predict(self,train_model:bool = True):
         if train_model:
             model = self.Train_Model()
         else:
             model = tf.keras.models.load_model(filepath=s.RNNModelFile)
 
-        # Normalize the Receipt_Count column
         d_min,d_max,data_csv = self.clean_data()
-
-        # Define the number of time steps
-
 
         last_n_days_data = data_csv['Normalized_Receipt_Count'].values[-self.step_size:]
         predicted_receipt_counts = []
@@ -117,8 +98,7 @@ class RNNPredictor:
         number_of_prediction_steps = math.ceil(365/self.step_size)
         
         for i in tqdm(range(number_of_prediction_steps)):
-            # Predict the next set of days
-            next_days_prediction = model.predict(current_sequence)
+            next_days_prediction = model.predict(current_sequence,verbose=0)
             next_days_prediction = next_days_prediction.reshape(1,self.step_size,1)
             current_sequence = next_days_prediction
 
