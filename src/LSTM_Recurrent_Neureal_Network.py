@@ -7,8 +7,7 @@ from config import Settings
 import math
 from tqdm import tqdm
 import random
-import logging
-tf.get_logger().setLevel(logging.ERROR)
+
 
 s = Settings()
 

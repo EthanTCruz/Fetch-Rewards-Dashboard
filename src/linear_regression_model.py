@@ -1,7 +1,6 @@
 import pandas as pd
 import scipy.stats as stats
-import plotly.graph_objects as go
-import plotly.express as px
+
 
 class LinearRegressionPredictor:
     def __init__(self,dataFileLocation: str) -> None:
