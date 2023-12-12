@@ -11,14 +11,14 @@ COPY ./data /usr/src/app/data
 
 
 # Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir .
 
 # Make port 8050 available to the world outside this container
 EXPOSE 8050
 
 # Define environment variable
-ENV dataFileLocation ./data/data_daily.csv
+ENV dataFileLocation ./data/raw/data_daily.csv
 ENV HOST "0.0.0.0"
 
 # Run dash_app.py when the container launches
-CMD ["python", "./src/"]
+CMD ["fetch_dashboard"]
