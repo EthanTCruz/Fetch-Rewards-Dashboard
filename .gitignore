@@ -9,3 +9,8 @@ cache-directory
 rnn_Model
 lstm_model
 predicted_data
+data/cache-directory/*
+data/models/*
+data/processed/*
+Fetch_Dash/classes/__pycache__/
+Fetch_Dash/config/__pycache__/

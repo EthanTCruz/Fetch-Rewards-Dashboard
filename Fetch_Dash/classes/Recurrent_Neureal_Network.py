@@ -3,18 +3,20 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import SimpleRNN, Dense
 import pandas as pd
 import numpy as np
-from config import Settings
+from config.config import Settings
 import math
 from tqdm import tqdm
 import random
-
+from classes.CustomCallback import TqdmProgressCallback
+import cowsay
 
 s = Settings()
 
 class RNNPredictor:
-    def __init__(self,dataFileLocation: str = s.dataFileLocation,step_size: int = 7) -> None:
+    def __init__(self,RNNModelFile: str,dataFileLocation: str = s.dataFileLocation,step_size: int = 7) -> None:
         self.dataFileLocation = dataFileLocation
         self.step_size = step_size
+        self.RNNModelFile = RNNModelFile
 
     def column_month_summation(self,df,column_name,start_date: str ='2022-01-01'):
 
@@ -66,10 +68,11 @@ class RNNPredictor:
         model.add(Dense(self.step_size))
         model.compile(optimizer='adam', loss='mse')
 
-        model.fit(X_train, y_train, epochs=100, batch_size=32,verbose=0)
+        cowsay.tux("Training simple RNN")
+        model.fit(X_train, y_train, epochs=100, batch_size=32,verbose=0,callbacks=[TqdmProgressCallback(total_epochs=100)])
         #loss = model.evaluate(X_test, y_test)
         #predictions = model.predict(X_test)
-        tf.keras.models.save_model(model=model,filepath=s.RNNModelFile)
+        tf.keras.models.save_model(model=model,filepath=self.RNNModelFile)
         return model
 
     def clean_data(self):
@@ -86,7 +89,7 @@ class RNNPredictor:
         if train_model:
             model = self.Train_Model()
         else:
-            model = tf.keras.models.load_model(filepath=s.RNNModelFile)
+            model = tf.keras.models.load_model(filepath=self.RNNModelFile)
 
         d_min,d_max,data_csv = self.clean_data()
 
@@ -95,7 +98,7 @@ class RNNPredictor:
 
         current_sequence = last_n_days_data.reshape((1, self.step_size, 1))
         number_of_prediction_steps = math.ceil(365/self.step_size)
-        
+        cowsay.tux("Making predictions")
         for i in tqdm(range(number_of_prediction_steps)):
             next_days_prediction = model.predict(current_sequence,verbose=0)
             next_days_prediction = next_days_prediction.reshape(1,self.step_size,1)

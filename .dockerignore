@@ -7,3 +7,8 @@ __pycache__/
 .Python
 db.sqlite3
 *.log
+data/cache-directory/*
+data/models/*
+data/processed/*
+Fetch_Dash/classes/__pycache__/
+Fetch_Dash/config/__pycache__/

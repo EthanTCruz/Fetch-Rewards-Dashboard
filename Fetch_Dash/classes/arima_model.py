@@ -1,7 +1,7 @@
 import pandas as pd
 import pmdarima as pm
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from config import Settings
+from config.config import Settings
 
 
 

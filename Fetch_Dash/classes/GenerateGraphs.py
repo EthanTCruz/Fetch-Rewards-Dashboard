@@ -1,14 +1,14 @@
 import pandas as pd
 import plotly.graph_objects as go
-from arima_model import ArimaPredictor
-from prophet_model import ProphetPredictor
-from linear_regression_model import LinearRegressionPredictor
-from Recurrent_Neureal_Network import RNNPredictor
-from LSTM_Recurrent_Neureal_Network import LSTMPredictor
+from classes.arima_model import ArimaPredictor
+from classes.prophet_model import ProphetPredictor
+from classes.linear_regression_model import LinearRegressionPredictor
+from classes.Recurrent_Neureal_Network import RNNPredictor
+from classes.LSTM_Recurrent_Neureal_Network import LSTMPredictor
 from pathlib import Path
 import json
 
-from config import Settings
+from config.config import Settings
 
 s = Settings()
 
@@ -183,7 +183,7 @@ class Grapher():
         if path.exists() and not refresh_data:
             predicted_data = self.Predicted_Data_Exists(predicted_file=s.simple_rnn_prediction)
         else:
-                rnn = RNNPredictor()
+                rnn = RNNPredictor(dataFileLocation=s.dataFileLocation,RNNModelFile=s.RNNModelFile)
                 predicted_data = rnn.predict()
                 self.No_Predicted_Data_Exists(predicted_data=predicted_data,predicted_file=s.simple_rnn_prediction)
         return self.GenerateGraphs(predicted_data=predicted_data)
@@ -191,11 +191,11 @@ class Grapher():
     
 
     def LSTMGraphs(self,refresh_data: bool = False):
-        path = Path(s.simple_rnn_prediction)
+        path = Path(s.lstm_rnn_prediction)
         if path.exists() and not refresh_data:
             predicted_data = self.Predicted_Data_Exists(predicted_file=s.lstm_rnn_prediction)
         else:
-                l = LSTMPredictor()
+                l = LSTMPredictor(dataFileLocation=s.dataFileLocation,LSTMModelFile=s.LSTMModelFile)
                 predicted_data = l.predict()
                 self.No_Predicted_Data_Exists(predicted_data=predicted_data,predicted_file=s.lstm_rnn_prediction)
         return self.GenerateGraphs(predicted_data=predicted_data)
