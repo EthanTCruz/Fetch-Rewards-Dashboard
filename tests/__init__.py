@@ -1,0 +1,1 @@
+from ..Fetch_Dash.classes.FlaskDash import ReceiptsDashboard

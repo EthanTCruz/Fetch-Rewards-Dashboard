@@ -1,2 +1,0 @@
-[console_scripts]
-fetch_dashboard = Fetch_Dash.main:run

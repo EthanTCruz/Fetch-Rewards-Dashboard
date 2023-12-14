@@ -110,5 +110,5 @@ class RNNPredictor:
         data_csv['Predicted_Receipts'] = results[0:365]
         monthly_sum = self.column_month_summation(df = data_csv,column_name='Predicted_Receipts')
         results = {"monthly_sum":monthly_sum}
-        
+
         return (results)

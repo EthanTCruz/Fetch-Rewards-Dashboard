@@ -2,7 +2,8 @@ import pandas as pd
 import pmdarima as pm
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from Fetch_Dash.config.config import Settings
-
+import random
+random.seed(10)
 
 
 s = Settings()

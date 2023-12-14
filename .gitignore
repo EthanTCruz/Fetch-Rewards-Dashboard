@@ -1,10 +1,6 @@
-.venv
-src\__pycache__
+.venv/
 env
-__pycache__
-\__pycache__
 .vscode
-src\__pycache__\
 cache-directory
 rnn_Model
 lstm_model
@@ -12,5 +8,4 @@ predicted_data
 data/cache-directory/*
 data/models/*
 data/processed/*
-Fetch_Dash/classes/__pycache__/
-Fetch_Dash/config/__pycache__/
+**/__pycache__/

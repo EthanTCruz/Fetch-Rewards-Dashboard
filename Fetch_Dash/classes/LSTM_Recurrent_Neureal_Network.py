@@ -104,7 +104,8 @@ class LSTMPredictor:
         predicted_receipt_counts = []
         current_sequence = last_n_days_data.reshape((1, self.step_size, 1))
         number_of_prediction_steps = math.ceil(365/self.step_size)
-        cowsay.tux("Making predictions")
+        cowsay.tux("Making predictions, and the app will now  be available on http://localhost:8050/")
+
         for i in tqdm(range(number_of_prediction_steps)):
             next_days_prediction = model.predict(current_sequence,verbose=0)
             next_days_prediction = next_days_prediction.reshape(1,self.step_size,1)
@@ -114,7 +115,8 @@ class LSTMPredictor:
 
         results = [(x * (d_max - d_min)) + d_min for x in predicted_receipt_counts]
         data_csv['Predicted_Receipts'] = results[0:365]
+
         monthly_sum = self.column_month_summation(df = data_csv,column_name='Predicted_Receipts')
         results = {"monthly_sum":monthly_sum}
-        
+
         return (results)

@@ -6,7 +6,7 @@ def read_requirements():
 
 setup(
     name='FetchRewardsDashboard',
-    version='1.0.0',
+    version='1.0.1',
     description='A dashboard for Fetch Rewards data analysis',
     author='Your Name',
     author_email='your.email@example.com',

@@ -9,12 +9,15 @@ from dash.dependencies import Input, Output
 from flask_caching import Cache
 from Fetch_Dash.config.config import Settings
 import cowsay
+s= Settings()
+
+
 
 class ReceiptsDashboard:
 
-    def Run(self):
-        s= Settings()
-
+    def get_server(self):
+        
+        app = dash.Dash(__name__)
         # Create a Dash application
         grapher = Grapher()
 
@@ -32,7 +35,6 @@ class ReceiptsDashboard:
         grapher.LSTMGraphs(refresh_data=True)
 
 
-        app = dash.Dash(__name__)
 
 
         # Setup cache
@@ -45,11 +47,11 @@ class ReceiptsDashboard:
                 dcc.Dropdown(
                 id='graph-dropdown',
                 options=[
-                    {'label': 'LSTM Recurrent Neural Network', 'value': 'lstm'},
-                    {'label': 'Simple Recurrent Neural Network', 'value': 'RNN'},
-                    {'label': 'ARIMA', 'value': 'ARIMA'},
-                    {'label': 'Prophet', 'value': 'Prophet'},
-                    {'label': 'Linear Regression', 'value': 'Linear Regression'}
+                    {'label': 'LSTM Recurrent Neural Network (Summed By Month)', 'value': 'lstm'},
+                    {'label': 'ARIMA (Summed By Month)', 'value': 'ARIMA'},
+                    {'label': 'Simple Recurrent Neural Network (Summed By Month)', 'value': 'RNN'},
+                    {'label': 'Prophet (Summed By Month)', 'value': 'Prophet'},
+                    {'label': 'Linear Regression (Summed By Month)', 'value': 'Linear Regression'}
                 ],
                 value='lstm'  # Default value
             ),
@@ -126,8 +128,13 @@ class ReceiptsDashboard:
             else:
                 return value
 
-        cowsay.cow("App is now ready to use")
+
+        return app.server
+
+    def Run(self):
+        app = self.get_server()
         app.run_server(debug=False, host=s.HOST, port=8050)
+
 
 
 
