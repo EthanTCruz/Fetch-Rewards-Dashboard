@@ -21,18 +21,17 @@ class ReceiptsDashboard:
         # Create a Dash application
         grapher = Grapher()
 
-        cowsay.cow("Creating Arima Model")
-        grapher.ArimaGraphs(refresh_data=True)
 
-        cowsay.cow("Creating Linear and Prophet Models")
-        grapher.LinearRegressionGraphs(refresh_data=True)
-        grapher.ProphetGraphs(refresh_data=True)
+        grapher.ArimaGraphs(refresh_data=False)
 
-        cowsay.cow("Creating Simple RNN Model")
-        grapher.RNNGraphs(refresh_data=True)
+        grapher.LinearRegressionGraphs(refresh_data=False)
+        grapher.ProphetGraphs(refresh_data=False)
 
-        cowsay.cow("Creating LSTM Model")
-        grapher.LSTMGraphs(refresh_data=True)
+
+        grapher.RNNGraphs(refresh_data=False)
+
+
+        grapher.LSTMGraphs(refresh_data=False)
 
 
 
